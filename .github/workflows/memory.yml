@@ -1,0 +1,35 @@
+name: commit memory
+
+on:
+  push:
+    branches: ["develop"]
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # precisa para commitar o memory.md de volta
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # precisa do commit anterior para o diff
+
+      - name: instala jq
+        run: sudo apt-get install -y jq
+
+      - name: roda commit_memory
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          chmod +x scripts/commit_memory.sh
+          bash scripts/commit_memory.sh opencode
+
+      - name: commita memory.md e context_prompt.txt
+        run: |
+          git config user.name  "commit-memory[bot]"
+          git config user.email "bot@noreply"
+          git add memory.md context_prompt.txt
+          git diff --cached --quiet || git commit -m "chore: memory update [${{ github.sha }}]"
+          git push
