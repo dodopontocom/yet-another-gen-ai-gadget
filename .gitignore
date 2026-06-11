@@ -1,2 +1,4 @@
 .trae/
 GEMINI.md
+*.env
+*.log
