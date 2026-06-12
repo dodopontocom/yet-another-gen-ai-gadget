@@ -30,8 +30,6 @@ app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/bets', betRoutes);
 
-<<<<<<< Updated upstream
-=======
 app.get('/api/games', async (req, res) => {
   try {
     const response = await fetch('https://worldcup26.ir/get/games');
@@ -69,7 +67,6 @@ app.get('/api/games', async (req, res) => {
   }
 });
 
->>>>>>> Stashed changes
 mongoose.connect(process.env.MONGO_URI || '')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
