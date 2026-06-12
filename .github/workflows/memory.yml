@@ -18,13 +18,13 @@ jobs:
       - name: instala jq
         run: sudo apt-get install -y jq
 
-      - name: roda commit_memory
+      - name: roda commit-memory
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
-          chmod +x scripts/commit_memory.sh
-          bash scripts/commit_memory.sh opencode
+          chmod +x scripts/commit-memory.sh
+          bash scripts/commit-memory.sh opencode
 
       - name: commita memory.md e context_prompt.txt
         run: |
