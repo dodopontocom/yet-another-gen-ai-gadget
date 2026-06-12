@@ -3,6 +3,7 @@ Stack: vite-react-typescript-starter — Node + Express + MongoDB + Next.js/Vite
 
 ERROS JÁ COMETIDOS — não repita:
 **Lição:** Nunca comitar marcadores de conflito de merge (<<<<<<<, =======, >>>>>>>) sem resolvê-los; sempre revisar o diff completo antes do commit
+**Lição:** Nunca comitar marcadores de conflito de merge sem resolvê-los; sempre revisar o diff antes do commit
 
 ATENÇÃO ESPECIAL (risco alto):
 nenhum ainda

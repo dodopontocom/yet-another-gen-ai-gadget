@@ -14,3 +14,10 @@
 **Lição:** Nunca comitar marcadores de conflito de merge (<<<<<<<, =======, >>>>>>>) sem resolvê-los; sempre revisar o diff completo antes do commit
 **Risco:** high | **Tags:** deploy, express, typescript
 
+
+## [2ac5163] 2026-06-12 14:37 🔴
+**O que mudou:** Marcadores de conflito de merge removidos, mantendo a nova rota /api/games
+**Por quê:** Commit anterior continha marcadores <<<<<<<, ======= e >>>>>>> que quebram a sintaxe do código
+**Lição:** Nunca comitar marcadores de conflito de merge sem resolvê-los; sempre revisar o diff antes do commit
+**Risco:** high | **Tags:** deploy, express, typescript, git
+
