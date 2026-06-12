@@ -5,3 +5,4 @@
 > Injetado como system prompt no início de cada sessão de desenvolvimento.
 
 ---
+
