@@ -20,7 +20,7 @@ jobs:
 
       - name: roda commit_memory
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GITHUB_SHA: ${{ github.sha }}
         run: |
           chmod +x scripts/commit_memory.sh
