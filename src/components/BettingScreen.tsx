@@ -113,25 +113,28 @@ export function BettingScreen() {
       const gameList = (data.games || []) as Game[];
       setGames(gameList);
       
-      // Initialize selectedGames with default bets for all games
-      const initialBets: Record<string, any> = {};
-      gameList.forEach(game => {
-        if (!game.finished || game.finished !== 'TRUE') {
-          initialBets[game.id] = selectedGames[game.id] || {
-            betType: 'exact',
-            exactHomeScore: 0,
-            exactAwayScore: 0,
-            simpleResult: 'home',
-            stake: 10,
-          };
-        }
+      // Initialize selectedGames with default bets for all games, but keep existing bets
+      setSelectedGames(prev => {
+        const initialBets: Record<string, any> = {};
+        gameList.forEach(game => {
+          if (!game.finished || game.finished !== 'TRUE') {
+            initialBets[game.id] = prev[game.id] || {
+              betType: 'exact',
+              exactHomeScore: 0,
+              exactAwayScore: 0,
+              simpleResult: 'home',
+              stake: 10,
+            };
+          }
+        });
+        return initialBets;
       });
-      setSelectedGames(initialBets);
       
       // Auto-select first available date if not already set
-      if (gameList.length > 0 && sortedDateKeys.length === 0) {
-        setCurrentDateIndex(0);
-      }
+      setCurrentDateIndex(prev => {
+        if (gameList.length > 0 && prev === 0) return 0;
+        return prev;
+      });
     } catch (err) {
       console.error('Error fetching games:', err);
       addToast('Erro ao carregar jogos', 'error');
@@ -139,7 +142,7 @@ export function BettingScreen() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [addToast, API_URL, selectedGames, sortedDateKeys.length]);
+  }, [addToast, API_URL]);
 
   useEffect(() => {
     fetchGames();
