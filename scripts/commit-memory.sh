@@ -84,6 +84,16 @@ DATE_NOW=$(date '+%Y-%m-%d %H:%M')
 ok "Commit: $SHORT_SHA"
 ok "Mensagem: $(echo "$COMMIT_MSG" | head -1)"
 
+# Verifica se o commit tem a flag [ai-cache]
+HAS_AI_CACHE=0
+if echo "$COMMIT_MSG" | grep -q "\[ai-cache\]"; then
+  HAS_AI_CACHE=1
+  ok "Flag [ai-cache] encontrada — processando commit"
+else
+  warn "Flag [ai-cache] não encontrada — pulando commit"
+  exit 0
+fi
+
 # Cap de tamanho
 DIFF_CHARS=${#DIFF}
 if [ "$DIFF_CHARS" -gt "$MAX_DIFF_CHARS" ]; then
