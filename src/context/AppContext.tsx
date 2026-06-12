@@ -23,12 +23,19 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Load currentUser from localStorage on initial render
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [foods, setFoods] = useState<Food[]>([]);
   const [bets, setBets] = useState<Bet[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [currentScreen, setCurrentScreen] = useState<Screen>('login');
+  const [currentScreen, setCurrentScreen] = useState<Screen>(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    return savedUser ? 'dashboard' : 'login';
+  });
 
   const addToast = useCallback((message: string, type: Toast['type']) => {
     const id = Date.now().toString();
@@ -42,6 +49,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
+  const handleSetCurrentUser = useCallback((user: User | null) => {
+    setCurrentUser(user);
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('currentUser');
+    }
+  }, []);
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -50,7 +66,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       bets,
       toasts,
       currentScreen,
-      setCurrentUser,
+      setCurrentUser: handleSetCurrentUser,
       setOnlineUsers,
       setFoods,
       setBets,

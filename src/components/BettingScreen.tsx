@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { Game } from '../types';
-import { Plus, Minus, Trophy, MapPin, Calendar } from 'lucide-react';
+import { Plus, Minus, Trophy, MapPin, Calendar, Lock, RefreshCw } from 'lucide-react';
 
 function formatBrazilianDate(dateStr: string): string {
   try {
@@ -57,9 +57,19 @@ function getBrazilianDateKey(utcDateStr: string): string {
   }
 }
 
+function isBetLocked(game: Game): boolean {
+  if (!game.utc_date) return false;
+  const gameDate = new Date(game.utc_date);
+  const now = new Date();
+  const diffMs = gameDate.getTime() - now.getTime();
+  const diffMinutes = diffMs / (1000 * 60);
+  return diffMinutes < 1;
+}
+
 export function BettingScreen() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedGames, setSelectedGames] = useState<Record<string, {
     betType: 'exact' | 'simple';
     exactHomeScore: number;
@@ -67,7 +77,7 @@ export function BettingScreen() {
     simpleResult: 'home' | 'draw' | 'away';
     stake: number;
   }>>({});
-  const { currentUser, addToast } = useApp();
+  const { currentUser, bets, addToast } = useApp();
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   // Group games by date and get sorted date keys
@@ -89,44 +99,54 @@ export function BettingScreen() {
 
   const [currentDateIndex, setCurrentDateIndex] = useState(0);
 
-  useEffect(() => {
-    async function fetchGames() {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`${API_URL}/api/games`);
-        const data = await response.json();
-        const gameList = (data.games || []) as Game[];
-        setGames(gameList);
-        
-        // Initialize selectedGames with default bets for all games
-        const initialBets: Record<string, any> = {};
-        gameList.forEach(game => {
-          if (!game.finished || game.finished !== 'TRUE') {
-            initialBets[game.id] = {
-              betType: 'exact',
-              exactHomeScore: 0,
-              exactAwayScore: 0,
-              simpleResult: 'home',
-              stake: 10,
-            };
-          }
-        });
-        setSelectedGames(initialBets);
-        
-        // Auto-select first available date
-        if (gameList.length > 0) {
-          setCurrentDateIndex(0);
-        }
-      } catch (err) {
-        console.error('Error fetching games:', err);
-        addToast('Erro ao carregar jogos', 'error');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+  // Check if user has already bet on a game
+  const hasAlreadyBet = useCallback((gameId: string) => {
+    return bets.some(bet => bet.matchId === gameId && bet.userId === currentUser?._id);
+  }, [bets, currentUser]);
 
+  const fetchGames = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(`${API_URL}/api/games`);
+      const data = await response.json();
+      const gameList = (data.games || []) as Game[];
+      setGames(gameList);
+      
+      // Initialize selectedGames with default bets for all games
+      const initialBets: Record<string, any> = {};
+      gameList.forEach(game => {
+        if (!game.finished || game.finished !== 'TRUE') {
+          initialBets[game.id] = selectedGames[game.id] || {
+            betType: 'exact',
+            exactHomeScore: 0,
+            exactAwayScore: 0,
+            simpleResult: 'home',
+            stake: 10,
+          };
+        }
+      });
+      setSelectedGames(initialBets);
+      
+      // Auto-select first available date if not already set
+      if (gameList.length > 0 && sortedDateKeys.length === 0) {
+        setCurrentDateIndex(0);
+      }
+    } catch (err) {
+      console.error('Error fetching games:', err);
+      addToast('Erro ao carregar jogos', 'error');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [addToast, API_URL, selectedGames, sortedDateKeys.length]);
+
+  useEffect(() => {
     fetchGames();
-  }, [addToast, API_URL]);
+    // Refresh games every 30 seconds for live scores
+    const interval = setInterval(() => fetchGames(false), 30000);
+    return () => clearInterval(interval);
+  }, [fetchGames]);
 
   const handleBetTypeChange = (gameId: string, betType: 'exact' | 'simple') => {
     setSelectedGames(prev => ({
@@ -163,12 +183,10 @@ export function BettingScreen() {
   const handleSimpleResultChange = (gameId: string, result: 'home' | 'draw' | 'away') => {
     setSelectedGames(prev => ({
       ...prev,
-      [gameId]: prev[gameId] || {
+      [gameId]: {
+        ...prev[gameId],
         betType: 'simple',
-        exactHomeScore: 0,
-        exactAwayScore: 0,
         simpleResult: result,
-        stake: 10,
       },
     }));
   };
@@ -202,8 +220,15 @@ export function BettingScreen() {
     }
 
     const gameBet = selectedGames[game.id];
-    if (!gameBet) {
-      addToast('Selecione um tipo de aposta primeiro', 'error');
+    if (!gameBet) return;
+
+    if (hasAlreadyBet(game.id)) {
+      addToast('Você já apostou neste jogo!', 'error');
+      return;
+    }
+
+    if (isBetLocked(game)) {
+      addToast('Apostas estão encerradas para este jogo!', 'error');
       return;
     }
 
@@ -231,7 +256,8 @@ export function BettingScreen() {
 
       if (response.ok) {
         addToast('Aposta realizada com sucesso!', 'success');
-        // Clear the bet for this game
+        // Refresh bets list (we should probably fetch it from API here)
+        // Remove the bet from selectedGames since user already bet
         setSelectedGames(prev => {
           const newState = { ...prev };
           delete newState[game.id];
@@ -264,12 +290,22 @@ export function BettingScreen() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-white">Apostas</h1>
-        {currentUser && (
-          <div className="bg-zinc-800 px-4 py-2 rounded-xl border border-zinc-700">
-            <span className="text-zinc-400 text-sm">Saldo</span>
-            <p className="text-2xl font-bold text-green-400">${currentUser.balance}</p>
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => fetchGames(true)}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-xl border border-zinc-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Atualizar
+          </button>
+          {currentUser && (
+            <div className="bg-zinc-800 px-4 py-2 rounded-xl border border-zinc-700">
+              <span className="text-zinc-400 text-sm">Saldo</span>
+              <p className="text-2xl font-bold text-green-400">${currentUser.balance}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Date Pagination */}
@@ -314,6 +350,8 @@ export function BettingScreen() {
             const gameBet = selectedGames[game.id];
             const isFinished = game.finished === 'TRUE';
             const gameDate = game.utc_date ? new Date(game.utc_date) : null;
+            const betLocked = isBetLocked(game);
+            const alreadyBet = hasAlreadyBet(game.id);
 
             return (
               <div key={game.id} className="bg-zinc-800/50 rounded-2xl p-6 border border-zinc-700/50">
@@ -327,6 +365,18 @@ export function BettingScreen() {
                       <div className="flex items-center gap-2 text-zinc-400 text-sm">
                         <MapPin className="w-4 h-4" />
                         <span>{game.stadium_name}, {game.stadium_city}</span>
+                      </div>
+                    )}
+                    {betLocked && (
+                      <div className="flex items-center gap-2 text-yellow-400 text-sm">
+                        <Lock className="w-4 h-4" />
+                        <span>Apostas encerradas</span>
+                      </div>
+                    )}
+                    {alreadyBet && (
+                      <div className="flex items-center gap-2 text-green-400 text-sm">
+                        <Trophy className="w-4 h-4" />
+                        <span>Você já apostou</span>
                       </div>
                     )}
                   </div>
@@ -363,7 +413,7 @@ export function BettingScreen() {
                     <p className="text-xl font-bold text-white">{game.home_team_name_en}</p>
                   </div>
                   <div className="flex items-center gap-4 px-4">
-                    {isFinished ? (
+                    {isFinished || game.time_elapsed !== 'notstarted' ? (
                       <>
                         <span className="text-4xl font-bold text-white">{game.home_score}</span>
                         <span className="text-2xl text-zinc-400">X</span>
@@ -382,8 +432,8 @@ export function BettingScreen() {
                   </div>
                 </div>
 
-                {/* Betting UI - Only if not finished and user is logged in */}
-                {!isFinished && currentUser && gameBet && (
+                {/* Betting UI - Only if not finished, user is logged in, not already bet, and bet not locked */}
+                {!isFinished && currentUser && gameBet && !alreadyBet && !betLocked && (
                   <div className="space-y-6 pt-4 border-t border-zinc-700/50">
                     {/* Bet Type Selector */}
                     <div className="flex gap-4">
@@ -513,6 +563,17 @@ export function BettingScreen() {
                       <Trophy className="w-6 h-6" />
                       Apostar ${gameBet.stake}
                     </button>
+                  </div>
+                )}
+
+                {/* Message if already bet or bet locked */}
+                {!isFinished && currentUser && (alreadyBet || betLocked) && (
+                  <div className="pt-4 border-t border-zinc-700/50 text-center">
+                    <p className="text-zinc-400">
+                      {alreadyBet 
+                        ? "Você já apostou neste jogo!" 
+                        : "Apostas estão encerradas para este jogo!"}
+                    </p>
                   </div>
                 )}
               </div>
