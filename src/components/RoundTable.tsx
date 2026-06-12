@@ -6,11 +6,12 @@ import { Users, Trophy } from 'lucide-react';
 export function RoundTable() {
   const { currentUser, onlineUsers, foods, setOnlineUsers, setFoods, addToast } = useApp();
   const socketRef = useRef<Socket | null>(null);
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
     if (!currentUser) return;
 
-    const socket = io('http://localhost:3001');
+    const socket = io(API_URL);
     socketRef.current = socket;
 
     socket.emit('user-online', currentUser._id);
@@ -23,7 +24,7 @@ export function RoundTable() {
       setFoods(foodsData);
     });
 
-    fetch('http://localhost:3001/api/foods')
+    fetch(`${API_URL}/api/foods`)
       .then(res => res.json())
       .then(data => setFoods(data));
 

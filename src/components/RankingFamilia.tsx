@@ -4,9 +4,10 @@ import { Trophy, Crown, Users } from 'lucide-react';
 
 export function RankingFamilia() {
   const { onlineUsers, setOnlineUsers, currentUser, addToast } = useApp();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users/online')
+    fetch(`${API_URL}/api/users/online`)
       .then(res => res.json())
       .then(data => setOnlineUsers(data))
       .catch(() => addToast('Erro ao carregar ranking', 'error'));

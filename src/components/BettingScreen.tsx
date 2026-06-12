@@ -13,6 +13,7 @@ export function BettingScreen() {
     stake: number;
   }>>({});
   const { currentUser, addToast } = useApp();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
     fetch('https://worldcup26.ir/get/games')
@@ -82,7 +83,7 @@ export function BettingScreen() {
     }
 
     try {
-      const res = await fetch('http://localhost:3001/api/bets', {
+      const res = await fetch(`${API_URL}/api/bets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

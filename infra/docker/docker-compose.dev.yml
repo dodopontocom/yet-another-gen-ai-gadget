@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: bolao-mongo-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data-dev:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: bolao_db
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.backend.dev
+    container_name: bolao-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../../backend:/app/backend
+      - ../../package.json:/app/package.json
+      - /app/node_modules
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/bolao_db
+      - PIN=${PIN}
+      - PORT=3001
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/Dockerfile.frontend.dev
+    container_name: bolao-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../../src:/app/src
+      - ../../public:/app/public
+      - ../../vite.config.ts:/app/vite.config.ts
+      - ../../tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:3001
+
+volumes:
+  mongo-data-dev:

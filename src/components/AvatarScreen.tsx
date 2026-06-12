@@ -7,9 +7,10 @@ export function AvatarScreen() {
   const [avatars, setAvatars] = useState<AvatarType[]>([]);
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarType | null>(null);
   const { addToast, setCurrentScreen, setCurrentUser } = useApp();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users/avatars')
+    fetch(`${API_URL}/api/users/avatars`)
       .then(res => res.json())
       .then(data => setAvatars(data))
       .catch(() => addToast('Erro ao carregar avatares', 'error'));
@@ -24,7 +25,7 @@ export function AvatarScreen() {
   const handleConfirm = async () => {
     if (!selectedAvatar) return;
     try {
-      const res = await fetch('http://localhost:3001/api/users/register', {
+      const res = await fetch(`${API_URL}/api/users/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

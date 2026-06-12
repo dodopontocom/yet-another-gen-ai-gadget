@@ -4,10 +4,11 @@ import { Trophy, Clock, CheckCircle2, XCircle } from 'lucide-react';
 
 export function MeuHistorico() {
   const { currentUser, bets, setBets, addToast } = useApp();
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
     if (currentUser) {
-      fetch(`http://localhost:3001/api/bets/user/${currentUser._id}`)
+      fetch(`${API_URL}/api/bets/user/${currentUser._id}`)
         .then(res => res.json())
         .then(data => setBets(data))
         .catch(() => addToast('Erro ao carregar apostas', 'error'));
