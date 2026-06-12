@@ -13,9 +13,8 @@
 **Risco:** low | **Tags:** deploy, env
 
 
-## [initial] 2026-06-11 20:56 🟢
-**O que mudou:** Adiciona pipeline de CI com GitHub Actions que executa scripts shell para analisar diff e gerar lições, configurando identidade git e verificando mudanças antes do commit.
-**Por quê:** Automatizar o aprendizado contínuo a partir de cada push no branch develop, evitando commits vazios e assegurando que o bot tenha identidade configurada.
-**Lição:** Sempre configurar o usuário e email do git no CI antes de commitar automaticamente, e usar git diff --cached --quiet para evitar commits sem alterações.
-**Risco:** low | **Tags:** deploy
-
+## [ca33fa5] 2026-06-11 20:58 🟢
+**O que mudou:** Adiciona padrões *.env e *.log ao .gitignore para ignorar arquivos de ambiente e logs no versionamento.
+**Por quê:** Prevenir que variáveis de ambiente sensíveis e logs sejam acidentalmente commitados, expondo segredos e poluindo o histórico.
+**Lição:** Sempre adicionar *.env e *.log ao .gitignore no início do projeto para evitar vazamento de segredos e manter o repositório limpo.
+**Risco:** low | **Tags:** env, deploy

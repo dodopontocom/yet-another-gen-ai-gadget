@@ -96,12 +96,25 @@ fi
 step "Lendo memória existente..."
 
 EXISTING_MEMORY=""
+ALREADY_EXISTS=0
 if [ -f "$MEMORY_FILE" ]; then
   # Pega as últimas 20 entradas para dar contexto à IA
   EXISTING_MEMORY=$(grep -A5 "^## \[" "$MEMORY_FILE" 2>/dev/null | tail -100 || true)
   ok "Memória existente: $(wc -l < "$MEMORY_FILE") linhas"
+  
+  # Verifica se esse commit já está na memória
+  LAST_COMMIT=$(grep "^## \[" "$MEMORY_FILE" | tail -1 | sed -n 's/^## \[\([^]]*\)\].*/\1/p')
+  if [ "$LAST_COMMIT" = "$SHORT_SHA" ]; then
+    warn "Commit $SHORT_SHA já está na memória — abortando"
+    ALREADY_EXISTS=1
+  fi
 else
   ok "Primeiro commit — criando memory.md"
+fi
+
+# Se já existe, sai
+if [ "$ALREADY_EXISTS" -eq 1 ]; then
+  exit 0
 fi
 
 # ── Prompt ───────────────────────────────────────
