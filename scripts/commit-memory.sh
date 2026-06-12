@@ -113,7 +113,7 @@ if [ -f "$MEMORY_FILE" ]; then
   ok "Memória existente: $(wc -l < "$MEMORY_FILE") linhas"
   
   # Verifica se esse commit já está na memória
-  LAST_COMMIT=$(grep "^## \[" "$MEMORY_FILE" | tail -1 | sed -n 's/^## \[\([^]]*\)\].*/\1/p')
+  LAST_COMMIT=$(grep "^## \[" "$MEMORY_FILE" 2>/dev/null | tail -1 | sed -n 's/^## \[\([^]]*\)\].*/\1/p' || true)
   if [ -n "$LAST_COMMIT" ] && [ "$LAST_COMMIT" = "$SHORT_SHA" ]; then
     warn "Commit $SHORT_SHA já está na memória — abortando"
     ALREADY_EXISTS=1
@@ -197,12 +197,12 @@ step "Gerando context_prompt.txt..."
 
 # Pega todas as lições (sem o cabeçalho do arquivo)
 ALL_LICOES=$(grep -A4 "^\*\*Lição:\*\*" "$MEMORY_FILE" 2>/dev/null \
-  | grep "^\*\*Lição:\*\*" \
+  | grep "^\*\*Lição:\*\*" 2>/dev/null || true \
   | sed 's/\*\*Lição:\*\* //' \
   | tail -30 || true)
 
 ALL_RISCOS_HIGH=$(grep -B3 "Risco: high" "$MEMORY_FILE" 2>/dev/null \
-  | grep "^\*\*Lição:\*\*" \
+  | grep "^\*\*Lição:\*\*" 2>/dev/null || true \
   | sed 's/\*\*Lição:\*\* //' || true)
 
 PROJECT_NAME=$(cat package.json 2>/dev/null | jq -r '.name // "?"')
