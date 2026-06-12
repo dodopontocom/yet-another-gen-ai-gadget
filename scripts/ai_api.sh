@@ -38,7 +38,7 @@ call_ai_api() {
       ;;
     opencode)
       if [ -z "${OPENCODE_API_KEY:-}" ]; then echo "❌ OPENCODE_API_KEY not set" >&2; return 1; fi
-      response=$(_call_opencode_zen "$model" "$system" "$user" "$max_tokens" "$temperature") || return 1
+      response=$(_call_opencode_zen "$model" "$system" "$user" "$max_tokens" "$temperature" "$image_url" "$response_format") || return 1
       ;;
     *)
       echo "❌ Unknown provider: $provider" >&2
@@ -139,13 +139,27 @@ _call_gemini() {
 }
 
 _call_deepseek() {
-  local model="$1" system="$2" user="$3" max_tokens="$4" temp="$5"
+  local model="$1" system="$2" user="$3" max_tokens="$4" temp="$5" img="$6" fmt="$7"
 
   local messages
-  messages=$(jq -n \
-    --arg sys "$system" \
-    --arg user "$user" \
-    '[{role: "system", content: $sys}, {role: "user", content: $user}]')
+  if [ -n "$img" ]; then
+    messages=$(jq -n \
+      --arg sys "$system" \
+      --arg txt "$user" \
+      --arg img "$img" \
+      '[
+        {role: "system", content: $sys},
+        {role: "user", content: [
+          {type: "text", text: $txt},
+          {type: "image_url", image_url: {url: $img}}
+        ]}
+      ]')
+  else
+    messages=$(jq -n \
+      --arg sys "$system" \
+      --arg user "$user" \
+      '[{role: "system", content: $sys}, {role: "user", content: $user}]')
+  fi
 
   local payload
   payload=$(jq -n \
@@ -153,7 +167,9 @@ _call_deepseek() {
     --argjson msgs "$messages" \
     --argjson mt "$max_tokens" \
     --argjson tmp "$temp" \
-    '{model: $model, messages: $msgs, max_tokens: $mt, temperature: $tmp}')
+    --arg fmt "$fmt" \
+    '{model: $model, messages: $msgs, max_tokens: $mt, temperature: $tmp}
+     + (if $fmt == "json_object" then {response_format: {type: "json_object"}} else {} end)')
 
   curl -s --max-time "$CURL_TIMEOUT" \
     https://api.deepseek.com/chat/completions \
@@ -163,13 +179,27 @@ _call_deepseek() {
 }
 
 _call_opencode_zen() {
-  local model="$1" system="$2" user="$3" max_tokens="$4" temp="$5"
+  local model="$1" system="$2" user="$3" max_tokens="$4" temp="$5" img="$6" fmt="$7"
 
   local messages
-  messages=$(jq -n \
-    --arg sys "$system" \
-    --arg user "$user" \
-    '[{role: "system", content: $sys}, {role: "user", content: $user}]')
+  if [ -n "$img" ]; then
+    messages=$(jq -n \
+      --arg sys "$system" \
+      --arg txt "$user" \
+      --arg img "$img" \
+      '[
+        {role: "system", content: $sys},
+        {role: "user", content: [
+          {type: "text", text: $txt},
+          {type: "image_url", image_url: {url: $img}}
+        ]}
+      ]')
+  else
+    messages=$(jq -n \
+      --arg sys "$system" \
+      --arg user "$user" \
+      '[{role: "system", content: $sys}, {role: "user", content: $user}]')
+  fi
 
   local payload
   payload=$(jq -n \
@@ -177,7 +207,9 @@ _call_opencode_zen() {
     --argjson msgs "$messages" \
     --argjson mt "$max_tokens" \
     --argjson tmp "$temp" \
-    '{model: $model, messages: $msgs, max_tokens: $mt, temperature: $tmp}')
+    --arg fmt "$fmt" \
+    '{model: $model, messages: $msgs, max_tokens: $mt, temperature: $tmp}
+     + (if $fmt == "json_object" then {response_format: {type: "json_object"}} else {} end)')
 
   curl -s --max-time "$CURL_TIMEOUT" \
     https://opencode.ai/zen/v1/chat/completions \
