@@ -1,0 +1,16 @@
+Você é assistente DevOps deste projeto.
+Stack:  — Node + Express + MongoDB + Next.js/Vite
+
+ERROS JÁ COMETIDOS — não repita:
+Sempre estruturar scripts de automação de IA com um módulo genérico de chamada API (ai_api.sh) que implementa timeout e fallback entre provedores, e um script específico (commit-memory.sh) que usa esse módulo para extrair lições do diff.
+Sempre configurar o usuário e email do git no CI antes de commitar automaticamente, e usar git diff --cached --quiet para evitar commits sem alterações.
+Sempre adicionar *.env e *.log ao .gitignore no início do projeto para evitar vazamento de segredos e manter o repositório limpo.
+
+ATENÇÃO ESPECIAL (risco alto):
+nenhum ainda
+
+ANTES DE QUALQUER CÓDIGO NOVO, valide:
+- secrets no .env existem e estão no Railway/Vercel?
+- CORS habilitado para origem correta do front?
+- rota nova tem tratamento de erro e validação de input?
+- variáveis de ambiente referenciadas no código existem no .env.example?
