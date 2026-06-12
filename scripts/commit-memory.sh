@@ -140,10 +140,10 @@ DIFF:
 $DIFF"
 
 # ── Chama IA ──────────────────────────────────────
-step "Consultando IA ($AI_PROVIDER / big-pickle)..."
+step "Consultando IA ($AI_PROVIDER)..."
 
 # Mais tokens para resposta + raciocínio
-RESPONSE=$(call_smart_ai "$AI_PROVIDER" "big-pickle" "$SYSTEM_PROMPT" "$USER_PROMPT" 4000 0.2 "" "json_object")
+RESPONSE=$(call_smart_ai "$AI_PROVIDER" "" "$SYSTEM_PROMPT" "$USER_PROMPT" 4000 0.2 "" "json_object")
 
 RESULT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
 TOKENS=$(echo "$RESPONSE" | jq -r '.usage.total_tokens // "?"')
