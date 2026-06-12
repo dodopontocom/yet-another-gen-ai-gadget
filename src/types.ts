@@ -49,6 +49,10 @@ export interface Game {
   local_date: string;
   persian_date: string;
   stadium_id: string;
+  stadium_name?: string;
+  stadium_city?: string;
+  stadium_timezone?: string;
+  utc_date?: string;
   finished: 'TRUE' | 'FALSE';
   time_elapsed: string;
   type: string;

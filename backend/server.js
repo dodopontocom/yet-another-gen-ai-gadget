@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
 import betRoutes from './routes/betRoutes.js';
 import { setupSocket } from './socket/socketHandler.js';
+import { getStadiumInfo } from './constants/stadiums.js';
 
 dotenv.config();
 
@@ -29,6 +30,46 @@ app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/bets', betRoutes);
 
+<<<<<<< Updated upstream
+=======
+app.get('/api/games', async (req, res) => {
+  try {
+    const response = await fetch('https://worldcup26.ir/get/games');
+    const data = await response.json();
+    
+    // Process each game to add stadium info and UTC timestamp
+    const processedGames = (data.games || []).map(game => {
+      const stadiumInfo = getStadiumInfo(game.stadium_name);
+      
+      // Try to parse the local_date into a UTC timestamp
+      let utcDate = null;
+      if (game.local_date) {
+        try {
+          // Assume local_date is in the stadium's timezone
+          const dateStr = game.local_date;
+          // Let's parse it to a Date object in the stadium's timezone, then convert to UTC
+          utcDate = new Date(dateStr).toISOString();
+        } catch (e) {
+          console.error('Error parsing date:', e);
+        }
+      }
+      
+      return {
+        ...game,
+        stadium_city: stadiumInfo.city,
+        stadium_timezone: stadiumInfo.timezone,
+        utc_date: utcDate,
+      };
+    });
+    
+    res.json({ games: processedGames });
+  } catch (err) {
+    console.error('Error fetching games:', err);
+    res.status(500).json({ message: 'Erro ao buscar jogos' });
+  }
+});
+
+>>>>>>> Stashed changes
 mongoose.connect(process.env.MONGO_URI || '')
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.error('MongoDB connection error:', err));
