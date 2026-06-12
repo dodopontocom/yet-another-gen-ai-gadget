@@ -52,11 +52,8 @@ export function BettingScreen() {
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
   useEffect(() => {
-    fetch('https://worldcup26.ir/get/games')
+    fetch(`${API_URL}/api/games`)
       .then(res => res.json())
-<<<<<<< Updated upstream
-      .then(data => setGames(data.games))
-=======
       .then(data => {
         const gameList = data.games || [];
         setGames(gameList);
@@ -72,9 +69,8 @@ export function BettingScreen() {
           }
         }
       })
->>>>>>> Stashed changes
       .catch(() => addToast('Erro ao carregar jogos', 'error'));
-  }, [addToast]);
+  }, [addToast, API_URL]);
 
   // Group games by Brazilian date
   const groupedGames = games.reduce((acc, game) => {
