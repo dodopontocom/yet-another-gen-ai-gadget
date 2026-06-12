@@ -114,7 +114,7 @@ if [ -f "$MEMORY_FILE" ]; then
   
   # Verifica se esse commit já está na memória
   LAST_COMMIT=$(grep "^## \[" "$MEMORY_FILE" | tail -1 | sed -n 's/^## \[\([^]]*\)\].*/\1/p')
-  if [ "$LAST_COMMIT" = "$SHORT_SHA" ]; then
+  if [ -n "$LAST_COMMIT" ] && [ "$LAST_COMMIT" = "$SHORT_SHA" ]; then
     warn "Commit $SHORT_SHA já está na memória — abortando"
     ALREADY_EXISTS=1
   fi
