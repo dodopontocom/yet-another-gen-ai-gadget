@@ -21,3 +21,10 @@
 **Lição:** Nunca comitar marcadores de conflito de merge sem resolvê-los; sempre revisar o diff antes do commit
 **Risco:** high | **Tags:** deploy, express, typescript, git
 
+
+## [af16bf6] 2026-06-12 15:07 🔴
+**O que mudou:** Removido selectedGames e sortedDateKeys.length das dependências do useEffect que chama fetchGames e alterada inicialização de apostas para usar updater funcional, evitando loop infinito de re-renderização
+**Por quê:** selectedGames como dependência causava re-fetch infinito porque, ao atualizar o estado dentro de fetchGames, o efeito disparava novamente
+**Lição:** Sempre verificar se o estado modificado dentro de um useEffect não está listado em suas dependências, ou usar updater funcional para evitar loops infinitos
+**Risco:** high | **Tags:** nextjs, typescript, hooks
+
