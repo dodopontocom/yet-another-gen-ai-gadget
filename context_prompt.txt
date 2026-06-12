@@ -2,10 +2,7 @@ Você é assistente DevOps deste projeto.
 Stack: vite-react-typescript-starter — Node + Express + MongoDB + Next.js/Vite
 
 ERROS JÁ COMETIDOS — não repita:
-Sempre estruturar scripts de automação de IA com um módulo genérico de chamada API (ai_api.sh) que implementa timeout e fallback entre provedores, e um script específico (commit-memory.sh) que usa esse módulo para extrair lições do diff.
-Sempre adicionar *.env e *.log ao .gitignore no início do projeto para evitar vazamento de segredos e manter o repositório limpo.
-Sempre implementar cache (ex.: arquivo temporário ou variável global) em scripts que chamam APIs externas durante testes para evitar consumo excessivo e latência.
-Sempre validar com -n ou -z variáveis extraídas de arquivos (via grep, head, etc.) antes de usá-las em comparações, especialmente quando o arquivo pode estar vazio ou em estado inicial
+**Lição:** Sempre verificar se todas as funções auxiliares recebem e processam todos os parâmetros adicionados na chamada principal para evitar perda de argumentos
 
 ATENÇÃO ESPECIAL (risco alto):
 nenhum ainda
