@@ -5,23 +5,25 @@ import { useState } from 'react';
 
 const navItems: { id: Screen; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'dashboard', label: 'Inicio', icon: Home },
-  { id: 'apostas', label: 'Apostas Ativas', icon: TrendingUp },
+  { id: 'apostas', label: 'Apostas', icon: TrendingUp },
   { id: 'historico', label: 'Meu Historico', icon: History },
-  { id: 'ranking', label: 'Ranking da Familia', icon: Trophy },
+  { id: 'ranking', label: 'Ranking', icon: Trophy },
 ];
 
 export function Sidebar() {
   const { currentScreen, setCurrentScreen, currentUser } = useApp();
   const [isOpen, setIsOpen] = useState(false);
 
+  if (!currentUser) return null;
+
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-zinc-900 border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-purple-900 to-blue-900 border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 transition-colors"
+            className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
           >
             {isOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
           </button>
@@ -45,11 +47,11 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-zinc-900 border-r border-zinc-800 transform transition-transform duration-300 lg:transform-none flex flex-col
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-purple-900 to-blue-900 border-r border-white/10 transform transition-transform duration-300 lg:transform-none flex flex-col
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-zinc-800 hidden lg:block">
+        <div className="p-6 border-b border-white/10 hidden lg:block">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
               <Trophy className="w-6 h-6 text-zinc-900" />
@@ -64,13 +66,21 @@ export function Sidebar() {
         {/* User Balance Card - Desktop */}
         <div className="p-4 hidden lg:block">
           <div className="bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl p-4 text-zinc-900">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-16 h-16 bg-zinc-900/20 rounded-full flex items-center justify-center text-4xl">
+                {currentUser.emoji}
+              </div>
+              <div>
+                <p className="font-semibold">{currentUser.name}</p>
+              </div>
+            </div>
             <p className="text-sm font-medium opacity-80">Saldo Disponivel</p>
             <p className="text-3xl font-bold mt-1">
               ${currentUser.balance.toLocaleString('pt-BR')}
             </p>
             <div className="mt-3 pt-3 border-t border-amber-600/30">
-              <p className="text-xs font-medium">Bem-vindo de volta!</p>
-              <p className="font-semibold">{currentUser.name}</p>
+              <p className="text-xs font-medium">Fominha Level</p>
+              <p className="font-bold">{currentUser.fominhaLevel}</p>
             </div>
           </div>
         </div>
@@ -91,7 +101,7 @@ export function Sidebar() {
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
                       ${isActive
                         ? 'bg-amber-500 text-zinc-900 font-semibold shadow-lg shadow-amber-500/20'
-                        : 'text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                       }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -104,9 +114,9 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800">
-          <p className="text-xs text-zinc-500 text-center">
-            Bolao da Familia v1.0
+        <div className="p-4 border-t border-white/10">
+          <p className="text-xs text-white/50 text-center">
+            Bolao da Familia v2.0
           </p>
         </div>
       </aside>
