@@ -97,6 +97,22 @@ export function BettingScreen() {
         const data = await response.json();
         const gameList = (data.games || []) as Game[];
         setGames(gameList);
+        
+        // Initialize selectedGames with default bets for all games
+        const initialBets: Record<string, any> = {};
+        gameList.forEach(game => {
+          if (!game.finished || game.finished !== 'TRUE') {
+            initialBets[game.id] = {
+              betType: 'exact',
+              exactHomeScore: 0,
+              exactAwayScore: 0,
+              simpleResult: 'home',
+              stake: 10,
+            };
+          }
+        });
+        setSelectedGames(initialBets);
+        
         // Auto-select first available date
         if (gameList.length > 0) {
           setCurrentDateIndex(0);
@@ -115,12 +131,9 @@ export function BettingScreen() {
   const handleBetTypeChange = (gameId: string, betType: 'exact' | 'simple') => {
     setSelectedGames(prev => ({
       ...prev,
-      [gameId]: prev[gameId] || {
+      [gameId]: {
+        ...prev[gameId],
         betType,
-        exactHomeScore: 0,
-        exactAwayScore: 0,
-        simpleResult: 'home',
-        stake: 10,
       },
     }));
   };
@@ -370,14 +383,14 @@ export function BettingScreen() {
                 </div>
 
                 {/* Betting UI - Only if not finished and user is logged in */}
-                {!isFinished && currentUser && (
+                {!isFinished && currentUser && gameBet && (
                   <div className="space-y-6 pt-4 border-t border-zinc-700/50">
                     {/* Bet Type Selector */}
                     <div className="flex gap-4">
                       <button
                         onClick={() => handleBetTypeChange(game.id, 'exact')}
                         className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-                          gameBet?.betType === 'exact' ? 'bg-purple-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                          gameBet.betType === 'exact' ? 'bg-purple-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                         }`}
                       >
                         Placar Exato
@@ -385,7 +398,7 @@ export function BettingScreen() {
                       <button
                         onClick={() => handleBetTypeChange(game.id, 'simple')}
                         className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-                          gameBet?.betType === 'simple' ? 'bg-purple-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
+                          gameBet.betType === 'simple' ? 'bg-purple-600 text-white' : 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
                         }`}
                       >
                         Resultado Simples
@@ -393,7 +406,7 @@ export function BettingScreen() {
                     </div>
 
                     {/* Exact Score UI */}
-                    {gameBet?.betType === 'exact' && (
+                    {gameBet.betType === 'exact' && (
                       <div className="flex items-center justify-center gap-8">
                         <div className="flex flex-col items-center gap-3">
                           <span className="text-zinc-400 text-sm font-semibold">{game.home_team_name_en}</span>
@@ -405,7 +418,7 @@ export function BettingScreen() {
                               <Minus className="w-6 h-6" />
                             </button>
                             <span className="text-5xl font-bold text-white w-16 text-center">
-                              {gameBet.exactHomeScore || 0}
+                              {gameBet.exactHomeScore}
                             </span>
                             <button
                               onClick={() => handleScoreChange(game.id, 'home', 1)}
@@ -428,7 +441,7 @@ export function BettingScreen() {
                               <Minus className="w-6 h-6" />
                             </button>
                             <span className="text-5xl font-bold text-white w-16 text-center">
-                              {gameBet.exactAwayScore || 0}
+                              {gameBet.exactAwayScore}
                             </span>
                             <button
                               onClick={() => handleScoreChange(game.id, 'away', 1)}
@@ -442,7 +455,7 @@ export function BettingScreen() {
                     )}
 
                     {/* Simple Result UI */}
-                    {gameBet?.betType === 'simple' && (
+                    {gameBet.betType === 'simple' && (
                       <div className="grid grid-cols-3 gap-3">
                         <button
                           onClick={() => handleSimpleResultChange(game.id, 'home')}
@@ -472,38 +485,34 @@ export function BettingScreen() {
                     )}
 
                     {/* Stake Selector */}
-                    {gameBet && (
-                      <div className="flex items-center justify-between bg-zinc-700/50 rounded-xl p-4">
-                        <span className="text-zinc-300 font-semibold">Valor da Aposta</span>
-                        <div className="flex items-center gap-4">
-                          <button
-                            onClick={() => handleStakeChange(game.id, -5)}
-                            className="w-12 h-12 bg-red-600 hover:bg-red-700 rounded-lg flex items-center justify-center text-white font-bold transition-all"
-                          >
-                            <Minus className="w-6 h-6" />
-                          </button>
-                          <span className="text-3xl font-bold text-white w-20 text-center">${gameBet.stake}</span>
-                          <button
-                            onClick={() => handleStakeChange(game.id, 5)}
-                            className="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center text-white font-bold transition-all"
-                          >
-                            <Plus className="w-6 h-6" />
-                          </button>
-                        </div>
+                    <div className="flex items-center justify-between bg-zinc-700/50 rounded-xl p-4">
+                      <span className="text-zinc-300 font-semibold">Valor da Aposta</span>
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={() => handleStakeChange(game.id, -5)}
+                          className="w-12 h-12 bg-red-600 hover:bg-red-700 rounded-lg flex items-center justify-center text-white font-bold transition-all"
+                        >
+                          <Minus className="w-6 h-6" />
+                        </button>
+                        <span className="text-3xl font-bold text-white w-20 text-center">${gameBet.stake}</span>
+                        <button
+                          onClick={() => handleStakeChange(game.id, 5)}
+                          className="w-12 h-12 bg-green-600 hover:bg-green-700 rounded-lg flex items-center justify-center text-white font-bold transition-all"
+                        >
+                          <Plus className="w-6 h-6" />
+                        </button>
                       </div>
-                    )}
+                    </div>
 
                     {/* Place Bet Button */}
-                    {gameBet && (
-                      <button
-                        onClick={() => handlePlaceBet(game)}
-                        disabled={currentUser.balance < gameBet.stake}
-                        className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xl font-bold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <Trophy className="w-6 h-6" />
-                        Apostar ${gameBet.stake}
-                      </button>
-                    )}
+                    <button
+                      onClick={() => handlePlaceBet(game)}
+                      disabled={currentUser.balance < gameBet.stake}
+                      className="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-xl font-bold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      <Trophy className="w-6 h-6" />
+                      Apostar ${gameBet.stake}
+                    </button>
                   </div>
                 )}
               </div>
